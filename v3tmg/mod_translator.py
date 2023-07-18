@@ -225,5 +225,6 @@ class ModTranslator:
         translated_buffer = self.translator.translate(
             json.dumps(buffer), target_language
         )
-        translated_dict[target_dict_key].update(translated_buffer)
+        dict_buffer = json.loads(translated_buffer)
+        translated_dict[target_dict_key].update(dict_buffer)
         buffer.clear()
