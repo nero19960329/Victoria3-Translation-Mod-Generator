@@ -81,7 +81,7 @@ def update_yaml_with_indexes(yaml_dict: Dict[str, Any], indexes: Dict[str, int])
     yaml_key = list(yaml_dict.keys())[0]
     for k, v in yaml_dict[yaml_key].items():
         if k in indexes:
-            yaml_dict[yaml_key][k] = f'{indexes[k]}: "{v}"'
+            yaml_dict[yaml_key][k] = f'{indexes[k]} "{v}"'
         else:
             yaml_dict[yaml_key][k] = f'"{v}"'
 
