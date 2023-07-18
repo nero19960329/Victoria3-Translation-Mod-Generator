@@ -1,10 +1,12 @@
 import json
 from loguru import logger
 import openai
+import os
 from retry import retry
 from typing import Dict, Any
 
 import v3tmg.localization as localization
+from v3tmg.openai import set_openai_configs
 
 
 class Translator:
@@ -14,11 +16,13 @@ class Translator:
 
     def __init__(self, model: str, localization_dict: Dict[str, str]):
         """
-        Initializes the Translator instance.
+        Initializes the Translator instance. Intializes the OpenAI API key and proxy if specified.
 
         :param model: str, the translation model name.
         :param localization_dict: Dict[str, str], a dictionary containing language mappings.
         """
+
+        set_openai_configs()
 
         self.model = model
         self.localization_dict = localization_dict
@@ -32,8 +36,7 @@ class Translator:
         :return: Dict[str, Any], the translated content.
         """
 
-        translated_content = self._translate_string(content, target_language)
-        return json.loads(translated_content)
+        return self._translate_string(content, target_language)
 
     @retry(tries=3, delay=20)
     def _translate_string(self, english_text: str, target_language: str) -> str:
@@ -66,25 +69,26 @@ class Translator:
         )
 
         result = translation.choices[0]["message"]["content"]
+
+        assert json.loads(result), "Translation result is not valid JSON"
+
         logger.debug(f"Translate result: {result}")
         return result
 
     def _build_system_message(self, target_language: str) -> str:
         """
-        Builds the system message for translation.
-
-        The system message is constructed based on the target language, providing instructions and requirements
-        for the translation task.
+        Builds the system message to be used in the translation.
 
         :param target_language: str, the target language code.
-        :return: str, the system message for translation.
+        :return: str, the system message.
         """
 
-        return f"""You are a historian from the Victorian era, a language expert and a geographer.
-Could you please help me with the {localization.get_language_name(self.localization_dict, target_language)} localization of a mod for the game Victoria 3?
-I will provide you with a JSON string.
-Your task is to translate the JSON string into {localization.get_language_name(self.localization_dict, target_language)} JSON string.
-Please note that some strings may contain formats such as `$xxx$` or `[xxx]`, which should not be translated.
-You should only output the translated JSON string, and you should assure that the translated JSON string is valid.
-Please assure that the translated string is composed by {localization.get_language_name(self.localization_dict, target_language)} characters.
-Pay attention to the difference between similar languages like Simplified Chinese and Traditional Chinese and Japanese, make sure you are translating to the correct language."""
+        filepath = os.path.dirname(os.path.realpath(__file__))
+        with open(
+            os.path.join(filepath, "prompts", "translator.txt"), "r", encoding="utf-8"
+        ) as f:
+            prompt = f.read()
+        return prompt.replace(
+            "{dst_lang}",
+            localization.get_language_name(self.localization_dict, target_language),
+        )
