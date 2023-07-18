@@ -20,6 +20,7 @@ Make sure you have the following installed:
 Install the required dependencies:
 
 ```sh
+cd victoria3-translation-mod-generator
 pip install -r requirements.txt
 ```
 
@@ -28,7 +29,9 @@ pip install -r requirements.txt
 The generator can be executed with the following command:
 
 ```sh
-python main.py --src <path_to_source_dir> --dst <path_to_destination_dir> --language <target_language> --model <gpt_model_name>
+export OPENAI_API_KEY=<your_openai_api_key>
+export OPENAI_PROXY=<your_openai_proxy> # Optional, e.g. "http://127.0.0.1:7890"
+python -m v3tmg --src <path_to_source_dir> --dst <path_to_destination_dir> --language <target_language> --model <gpt_model_name>
 ```
 
 The available command-line arguments are as follows:
