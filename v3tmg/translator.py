@@ -38,7 +38,7 @@ class Translator:
 
         return self._translate_string(content, target_language)
 
-    @retry(tries=3, delay=20)
+    @retry(tries=5, delay=20)
     def _translate_string(self, english_text: str, target_language: str) -> str:
         """
         Translates the given English text to the target language using the specified model.
@@ -54,23 +54,27 @@ class Translator:
             f"Translating {english_text} to {localization.get_language_name(self.localization_dict, target_language)} using {self.model}"
         )
 
-        translation = openai.ChatCompletion.create(
-            model=self.model,
-            messages=[
-                {
-                    "role": "system",
-                    "content": self._build_system_message(target_language),
-                },
-                {
-                    "role": "user",
-                    "content": english_text,
-                },
-            ],
-        )
+        try:
+            translation = openai.ChatCompletion.create(
+                model=self.model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": self._build_system_message(target_language),
+                    },
+                    {
+                        "role": "user",
+                        "content": english_text,
+                    },
+                ],
+            )
 
-        result = translation.choices[0]["message"]["content"]
+            result = translation.choices[0]["message"]["content"]
 
-        assert json.loads(result), "Translation result is not valid JSON"
+            assert json.loads(result), "Translation result is not valid JSON"
+        except Exception as e:
+            logger.error(f"Translation failed: {e}")
+            raise e
 
         logger.debug(f"Translate result: {result}")
         return result

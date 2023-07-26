@@ -3,6 +3,7 @@ import json
 from loguru import logger
 import os
 import re
+import tiktoken
 from typing import Dict, Tuple, Any
 import yaml
 
@@ -15,7 +16,7 @@ def parse_content(content: str) -> Tuple[str, Dict[str, int]]:
     Parses the given content string and extracts the indexes and src_content.
 
     The input string is expected to be in the following format:
-        'l_english:\n x1:n1 "y1"\n x2: n2 "y2"\n x3: n3 "y3"\n...'
+        'l_english:\n x1: n1 "y1"\n x2: n2 "y2"\n x3: n3 "y3"\n...'
 
     Where:
         - l_english, x1, x2, x3, etc. are keys,
@@ -39,7 +40,7 @@ def parse_content(content: str) -> Tuple[str, Dict[str, int]]:
 
     for x, n, y in matches:
         y = y.replace("\n", " ").replace("\r", " ").strip()
-        src_content += f" {x}: {y}\n"
+        src_content += f" {x}: \"{y}\"\n"
         if n:
             indexes[x] = int(n)
 
@@ -59,15 +60,15 @@ def create_directories(dst: str, language: str) -> None:
     os.makedirs(os.path.join(dst, "localization", language), exist_ok=True)
 
 
-def dict_size(dict_obj: Dict[str, Any]) -> int:
+def dict_token_size(dict_obj: Dict[str, Any], model: str) -> int:
     """
-    Calculates the size of a dictionary by summing the lengths of its keys and values.
+    Calculates the token size of a dictionary by summing the lengths of its keys and values.
 
     :param dict_obj: Dict[str, Any], the dictionary object.
-    :return: int, the size of the dictionary.
+    :return: int, the token size of the dictionary.
     """
 
-    return sum([len(k) + len(v) for k, v in dict_obj.items()])
+    return len(tiktoken.encoding_for_model(model).encode(json.dumps(dict_obj)))
 
 
 def update_yaml_with_indexes(yaml_dict: Dict[str, Any], indexes: Dict[str, int]):
@@ -118,18 +119,18 @@ class ModTranslator:
     """
 
     def __init__(
-        self, model: str, localization_dict: Dict[str, str], dict_size_threshold: int
+        self, model: str, localization_dict: Dict[str, str], dict_token_size_threshold: int
     ):
         """
         Initializes the ModTranslator instance.
 
         :param model: str, the translation model name.
         :param localization_dict: Dict[str, str], a dictionary containing language mappings.
-        :param dict_size_threshold: int, the dictionary size threshold for translation.
+        :param dict_token_size_threshold: int, the dictionary size threshold for translation.
         """
 
         self.translator = Translator(model, localization_dict)
-        self.dict_size_threshold = dict_size_threshold
+        self.dict_token_size_threshold = dict_token_size_threshold
 
     def translate_mod_files(self, src: str, dst: str, language: str):
         """
@@ -193,7 +194,7 @@ class ModTranslator:
         for key, value in translated_dict[target_dict_key].items():
             if isinstance(value, str):
                 buffer[key] = value
-            if dict_size(buffer) >= self.dict_size_threshold:
+            if dict_token_size(buffer, self.translator.model) >= self.dict_token_size_threshold:
                 self.translate_and_update_buffer(
                     buffer, translated_dict, target_dict_key, target_language
                 )

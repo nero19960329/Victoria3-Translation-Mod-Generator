@@ -26,6 +26,8 @@ if __name__ == "__main__":
     }
 
     mod_translator = ModTranslator(
-        args.model, localization_dict, dict_size_threshold=2500
+        args.model,
+        localization_dict,
+        dict_token_size_threshold=500,
     )
     mod_translator.translate_mod_files(args.src, args.dst, args.language)

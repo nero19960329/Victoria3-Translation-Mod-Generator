@@ -3,3 +3,4 @@ loguru
 openai
 retry
 pyyaml
+tiktoken
