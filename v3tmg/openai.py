@@ -10,3 +10,5 @@ def set_openai_configs() -> None:
             "https": os.environ["OPENAI_PROXY"],
             "http": os.environ["OPENAI_PROXY"],
         }
+    if os.getenv("OPENAI_API_BASE"):
+        openai.api_base = os.environ["OPENAI_API_BASE"]
