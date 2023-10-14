@@ -40,7 +40,7 @@ def parse_content(content: str) -> Tuple[str, Dict[str, int]]:
 
     for x, n, y in matches:
         y = y.replace("\n", " ").replace("\r", " ").strip()
-        src_content += f" {x}: \"{y}\"\n"
+        src_content += f' {x}: "{y}"\n'
         if n:
             indexes[x] = int(n)
 
@@ -119,7 +119,10 @@ class ModTranslator:
     """
 
     def __init__(
-        self, model: str, localization_dict: Dict[str, str], dict_token_size_threshold: int
+        self,
+        model: str,
+        localization_dict: Dict[str, str],
+        dict_token_size_threshold: int,
     ):
         """
         Initializes the ModTranslator instance.
@@ -194,7 +197,10 @@ class ModTranslator:
         for key, value in translated_dict[target_dict_key].items():
             if isinstance(value, str):
                 buffer[key] = value
-            if dict_token_size(buffer, self.translator.model) >= self.dict_token_size_threshold:
+            if (
+                dict_token_size(buffer, self.translator.model)
+                >= self.dict_token_size_threshold
+            ):
                 self.translate_and_update_buffer(
                     buffer, translated_dict, target_dict_key, target_language
                 )
