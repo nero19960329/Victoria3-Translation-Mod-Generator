@@ -31,6 +31,7 @@ The generator can be executed with the following command:
 ```sh
 export OPENAI_API_KEY=<your_openai_api_key>
 export OPENAI_PROXY=<your_openai_proxy> # Optional, e.g. "http://127.0.0.1:7890"
+export OPENAI_API_BASE=<your_openai_api_base> # Optional, e.g. "https://api.openai.com/v1"
 python -m v3tmg --src <path_to_source_dir> --dst <path_to_destination_dir> --language <target_language> --model <gpt_model_name>
 ```
 
