@@ -98,6 +98,8 @@ def build_yaml_content(yaml_dict: Dict[str, Any]) -> str:
     yaml_key = list(yaml_dict.keys())[0]
     content = f"{yaml_key}:\n"
     for k, v in yaml_dict[yaml_key].items():
+        # XXX: `\n` -> `\\n` is a workaround
+        v = v.replace("\n", "\\n")
         content += f" {k}: {v}\n"
     return content.strip()
 
