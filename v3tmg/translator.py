@@ -1,12 +1,12 @@
 import json
-from loguru import logger
-import openai
 import os
-from retry import retry
 from typing import Dict, Any
 
+from loguru import logger
+from retry import retry
+
 import v3tmg.localization as localization
-from v3tmg.openai import set_openai_configs
+from v3tmg.openai import get_openai_client
 
 
 class Translator:
@@ -21,8 +21,7 @@ class Translator:
         :param model: str, the translation model name.
         :param localization_dict: Dict[str, str], a dictionary containing language mappings.
         """
-
-        set_openai_configs()
+        self.client = get_openai_client()
 
         self.model = model
         self.localization_dict = localization_dict
@@ -51,11 +50,13 @@ class Translator:
         """
 
         logger.debug(
-            f"Translating {english_text} to {localization.get_language_name(self.localization_dict, target_language)} using {self.model}"
+            f"Translating {english_text} to "
+            f"{localization.get_language_name(self.localization_dict, target_language)}"
+            f" using {self.model}"
         )
 
         try:
-            translation = openai.ChatCompletion.create(
+            translation = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {
@@ -69,7 +70,7 @@ class Translator:
                 ],
             )
 
-            result = translation.choices[0]["message"]["content"]
+            result = translation.choices[0].message.content
 
             assert json.loads(result), "Translation result is not valid JSON"
         except Exception as e:
