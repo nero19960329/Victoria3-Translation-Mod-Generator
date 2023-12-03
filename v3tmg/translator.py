@@ -11,15 +11,18 @@ from v3tmg.openai import get_openai_client
 
 class Translator:
     """
-    Performs translation of content using a translation model and localization mappings.
+    Performs translation of content
+    using a translation model and localization mappings.
     """
 
     def __init__(self, model: str, localization_dict: Dict[str, str]):
         """
-        Initializes the Translator instance. Intializes the OpenAI API key and proxy if specified.
+        Initializes the Translator instance.
+        Intializes the OpenAI API key and proxy if specified.
 
         :param model: str, the translation model name.
-        :param localization_dict: Dict[str, str], a dictionary containing language mappings.
+        :param localization_dict:
+            Dict[str, str], a dictionary containing language mappings.
         """
         self.client = get_openai_client()
 
@@ -40,19 +43,23 @@ class Translator:
     @retry(tries=5, delay=20)
     def _translate_string(self, english_text: str, target_language: str) -> str:
         """
-        Translates the given English text to the target language using the specified model.
+        Translates the given English text to
+        the target language using the specified model.
 
-        This method internally calls the OpenAI's ChatGPT service for the translation.
+        This method internally calls the
+        OpenAI's ChatGPT service for the translation.
 
         :param english_text: str, the English text to be translated.
         :param target_language: str, the target language code.
         :return: str, the translated text.
         """
 
+        target_language_name = localization.get_language_name(
+            self.localization_dict,
+            target_language,
+        )
         logger.debug(
-            f"Translating {english_text} to "
-            f"{localization.get_language_name(self.localization_dict, target_language)}"
-            f" using {self.model}"
+            f"Translating {english_text} to {target_language_name} using {self.model}"
         )
 
         try:
@@ -90,10 +97,14 @@ class Translator:
 
         filepath = os.path.dirname(os.path.realpath(__file__))
         with open(
-            os.path.join(filepath, "prompts", "translator.txt"), "r", encoding="utf-8"
+            os.path.join(filepath, "prompts", "translator.txt"),
+            "r",
+            encoding="utf-8",
         ) as f:
             prompt = f.read()
         return prompt.replace(
             "{dst_lang}",
-            localization.get_language_name(self.localization_dict, target_language),
+            localization.get_language_name(
+                self.localization_dict, target_language
+            ),
         )

@@ -25,15 +25,21 @@ def parse_content(content: str) -> Tuple[str, Dict[str, int]]:
         - y1, y2, y3, etc. are corresponding string values.
 
     The function returns two outputs:
-        - src_content: a re-formatted string without index values and quotes around y-values.
-        - indexes: a dictionary where the key is x1, x2, x3 and the value is n1, n2, n3.
+        - src_content:
+            a re-formatted string without index values
+            and quotes around y-values.
+        - indexes:
+            a dictionary where the key is x1, x2, x3
+            and the value is n1, n2, n3.
 
     :param content: str, the input string to be parsed.
     :return: tuple (src_content, indexes).
     """
 
     header, rest = content.split(":", 1)
-    pattern = re.compile(r'(\w+):\s*(\d+)?\s*"([^"]*)"', re.MULTILINE | re.DOTALL)
+    pattern = re.compile(
+        r'(\w+):\s*(\d+)?\s*"([^"]*)"', re.MULTILINE | re.DOTALL
+    )
     matches = pattern.findall(rest)
 
     src_content = header + ":\n"
@@ -63,7 +69,8 @@ def create_directories(dst: str, language: str) -> None:
 
 def dict_token_size(dict_obj: Dict[str, Any], model: str) -> int:
     """
-    Calculates the token size of a dictionary by summing the lengths of its keys and values.
+    Calculates the token size of a dictionary
+    by summing the lengths of its keys and values.
 
     :param dict_obj: Dict[str, Any], the dictionary object.
     :return: int, the token size of the dictionary.
@@ -72,7 +79,9 @@ def dict_token_size(dict_obj: Dict[str, Any], model: str) -> int:
     return len(tiktoken.encoding_for_model(model).encode(json.dumps(dict_obj)))
 
 
-def update_yaml_with_indexes(yaml_dict: Dict[str, Any], indexes: Dict[str, int]):
+def update_yaml_with_indexes(
+    yaml_dict: Dict[str, Any], indexes: Dict[str, int]
+):
     """
     Updates the translated YAML dictionary with the indexes.
 
@@ -131,8 +140,10 @@ class ModTranslator:
         Initializes the ModTranslator instance.
 
         :param model: str, the translation model name.
-        :param localization_dict: Dict[str, str], a dictionary containing language mappings.
-        :param dict_token_size_threshold: int, the dictionary size threshold for translation.
+        :param localization_dict:
+            Dict[str, str], a dictionary containing language mappings.
+        :param dict_token_size_threshold:
+            int, the dictionary size threshold for translation.
         """
 
         self.translator = Translator(model, localization_dict)
@@ -143,28 +154,36 @@ class ModTranslator:
         Translates the game mod files from English to the target language.
 
         :param src: str, the source directory containing the mod files.
-        :param dst: str, the destination directory to store the translated mod files.
+        :param dst:
+            str, the destination directory to store the translated mod files.
         :param language: str, the target language code.
         """
 
         create_directories(dst, language)
 
+        language_name = localization.get_language_name(
+            self.translator.localization_dict,
+            language,
+        )
         logger.info(
-            f"Translating {localization.get_language_name(self.translator.localization_dict, language)} using {self.translator.model}"
+            f"Translating {language_name} using {self.translator.model}"
         )
 
-        for root, dirs, files in os.walk(src):
+        for root, _, files in os.walk(src):
             for file in files:
                 if is_mod_file(file):
                     logger.info(f"Translating {file}")
-                    self.translate_mod_file(os.path.join(root, file), dst, language)
+                    self.translate_mod_file(
+                        os.path.join(root, file), dst, language
+                    )
 
     def translate_mod_file(self, file_path: str, dst: str, language: str):
         """
         Translates a single mod file from English to the target language.
 
         :param file_path: str, the path to the mod file.
-        :param dst: str, the destination directory to store the translated mod files.
+        :param dst:
+            str, the destination directory to store the translated mod files.
         :param language: str, the target language code.
         """
 
@@ -186,9 +205,11 @@ class ModTranslator:
         self, english_dict: Dict[str, Any], target_language: str
     ) -> Dict[str, Any]:
         """
-        Translates the string values in the dictionary from English to the target language.
+        Translates the string values in the dictionary
+        from English to the target language.
 
-        :param english_dict: Dict[str, Any], the dictionary with English string values.
+        :param english_dict:
+            Dict[str, Any], the dictionary with English string values.
         :param target_language: str, the target language code.
         :return: Dict[str, Any], the translated dictionary.
         """
@@ -224,12 +245,18 @@ class ModTranslator:
         target_language: str,
     ) -> None:
         """
-        Translates the strings in the buffer and updates the translated dictionary.
+        Translates the strings in the buffer
+        and updates the translated dictionary.
 
-        :param buffer: Dict[str, Any], the buffer containing string values to be translated.
-        :param translated_dict: Dict[str, Any], the translated dictionary.
-        :param target_dict_key: str, the key for the target language in the translated dictionary.
-        :param target_language: str, the target language code.
+        :param buffer:
+            Dict[str, Any],
+            the buffer containing string values to be translated.
+        :param translated_dict:
+            Dict[str, Any], the translated dictionary.
+        :param target_dict_key:
+            str, the key for the target language in the translated dictionary.
+        :param target_language:
+            str, the target language code.
         """
 
         translated_buffer = self.translator.translate(

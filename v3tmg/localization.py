@@ -8,7 +8,8 @@ def get_language_name(
     """
     Retrieves the name of the language based on the given language code.
 
-    :param localization_dict: Dict[str, str], a dictionary containing language mappings.
+    :param localization_dict:
+        Dict[str, str], a dictionary containing language mappings.
     :param language: str, the language code.
     :return: str, the corresponding language name.
     """
