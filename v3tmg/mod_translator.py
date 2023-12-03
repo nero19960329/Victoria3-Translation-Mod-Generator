@@ -177,7 +177,9 @@ class ModTranslator:
                         os.path.join(root, file), dst, language
                     )
 
-    def translate_mod_file(self, file_path: str, dst: str, language: str):
+    def translate_mod_file(
+        self, file_path: str, dst: str, language: str
+    ) -> None:
         """
         Translates a single mod file from English to the target language.
 
@@ -186,23 +188,36 @@ class ModTranslator:
             str, the destination directory to store the translated mod files.
         :param language: str, the target language code.
         """
+        dst_filename = os.path.basename(file_path).replace("english", language)
+        dst_filepath = os.path.join(dst, "localization", language, dst_filename)
+
+        dst_yaml = {}
+        if os.path.exists(dst_filepath):
+            with codecs.open(dst_filepath, "r", encoding="utf-8-sig") as fin:
+                content = fin.read()
+                dst_content, _ = parse_content(content)
+                dst_yaml = yaml.safe_load(dst_content)
 
         with codecs.open(file_path, "r", encoding="utf-8-sig") as fin:
             content = fin.read()
             src_content, indexes = parse_content(content)
             src_yaml = yaml.safe_load(src_content)
-            dst_yaml = self.translate_dict(src_yaml, language)
+            dst_yaml = self.translate_dict(
+                src_yaml,
+                dst_yaml,
+                language,
+            )
             update_yaml_with_indexes(dst_yaml, indexes)
             dst_content = build_yaml_content(dst_yaml)
-
-        dst_filename = os.path.basename(file_path).replace("english", language)
-        dst_filepath = os.path.join(dst, "localization", language, dst_filename)
 
         with codecs.open(dst_filepath, "w", encoding="utf-8-sig") as fout:
             fout.write(dst_content)
 
     def translate_dict(
-        self, english_dict: Dict[str, Any], target_language: str
+        self,
+        english_dict: Dict[str, Any],
+        translated_dict: Dict[str, Any],
+        target_language: str,
     ) -> Dict[str, Any]:
         """
         Translates the string values in the dictionary
@@ -210,15 +225,23 @@ class ModTranslator:
 
         :param english_dict:
             Dict[str, Any], the dictionary with English string values.
+        :param translated_dict:
+            Dict[str, Any], the dictionary with translated string values.
         :param target_language: str, the target language code.
         :return: Dict[str, Any], the translated dictionary.
         """
 
         target_dict_key = f"l_{target_language}"
-        translated_dict = {target_dict_key: english_dict["l_english"]}
+        result_dict = {target_dict_key: english_dict["l_english"]}
         buffer = {}
 
-        for key, value in translated_dict[target_dict_key].items():
+        for key, value in result_dict[target_dict_key].items():
+            if key in translated_dict.get(target_dict_key, {}):
+                result_dict[target_dict_key][key] = translated_dict[
+                    target_dict_key
+                ][key]
+                continue
+
             if isinstance(value, str):
                 buffer[key] = value
             if (
@@ -226,16 +249,16 @@ class ModTranslator:
                 >= self.dict_token_size_threshold
             ):
                 self.translate_and_update_buffer(
-                    buffer, translated_dict, target_dict_key, target_language
+                    buffer, result_dict, target_dict_key, target_language
                 )
         if buffer:
             self.translate_and_update_buffer(
-                buffer, translated_dict, target_dict_key, target_language
+                buffer, result_dict, target_dict_key, target_language
             )
 
-        for key, value in translated_dict[target_dict_key].items():
-            translated_dict[target_dict_key][key] = value
-        return translated_dict
+        for key, value in result_dict[target_dict_key].items():
+            result_dict[target_dict_key][key] = value
+        return result_dict
 
     def translate_and_update_buffer(
         self,
